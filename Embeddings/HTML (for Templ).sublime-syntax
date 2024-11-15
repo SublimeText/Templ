@@ -1,0 +1,30 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/syntax.html
+scope: text.html.go.templ
+hidden: true
+version: 2
+
+extends: Packages/HTML/HTML.sublime-syntax
+
+variables:
+
+  tag_name_start: (?:[A-Za-z]|{)
+
+contexts:
+
+  prototype:
+    - meta_prepend: true
+    - include: scope:source.go.templ#match-text-templates
+
+  cdata-content:
+    - meta_prepend: true
+    - include: scope:source.go.templ#match-string-templates
+
+  tag-attribute-value-content:
+    - meta_prepend: true
+    - include: scope:source.go.templ#match-string-templates
+
+  strings-common-content:
+    - meta_prepend: true
+    - include: scope:source.go.templ#match-string-templates

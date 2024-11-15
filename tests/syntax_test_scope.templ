@@ -1,0 +1,43 @@
+// SYNTAX TEST "Templ.sublime-syntax"
+package main
+
+import "net/http"
+
+var helloHandle = templ.NewOnceHandle()
+
+templ hello(label, name string) {
+  // This script is only rendered once per HTTP request.
+  @helloHandle.Once() {
+    <script type="text/javascript">
+      function hello(name) {
+        alert('Hello, ' + name + '!');
+      }
+    </script>
+  }
+  <div>
+    <input type="button" value={ label } data-name={ name }/>
+    <script type="text/javascript">
+      // To prevent the variables from leaking into the global scope,
+      // this script is wrapped in an IIFE (Immediately Invoked Function Expression).
+      (() => {
+        let scriptElement = document.currentScript;
+        let parent = scriptElement.closest('div');
+        let nearestButtonWithName = parent.querySelector('input[data-name]');
+        nearestButtonWithName.addEventListener('click', function() {
+          let name = nearestButtonWithName.getAttribute('data-name');
+          hello(name);
+        })
+      })()
+    </script>
+  </div>
+}
+
+templ page() {
+  @hello("Hello User", "user")
+  @hello("Hello World", "world")
+}
+
+func main() {
+  http.Handle("/", templ.Handler(page()))
+  http.ListenAndServe("127.0.0.1:8080", nil)
+}

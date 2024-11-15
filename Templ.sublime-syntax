@@ -1,0 +1,92 @@
+%YAML 1.2
+---
+# Replaces "https://packagecontrol.io/packages/Templ%20%28go%29"
+# https://templ.guide/
+# http://www.sublimetext.com/docs/syntax.html
+name: Templ
+scope: source.go.templ
+version: 2
+
+extends: Packages/Go/Go.sublime-syntax
+
+file_extensions:
+  - templ
+
+contexts:
+
+  match-keywords:
+    - meta_prepend: true
+    - include: match-keyword-templ
+
+  match-keyword-templ:
+    - match: \btempl\b(?!\s*\.)
+      scope: keyword.declaration.component.go.templ
+      push:
+        - pop-templ-block
+        - pop-func-parameter-list
+        - pop-templ-name
+
+  pop-templ-name:
+    - match: '{{ident}}'
+      scope: entity.name.component.go.templ
+      pop: 1
+    - include: pop-before-nonblank
+
+  pop-templ-block:
+    - match: \{
+      scope: punctuation.section.block.begin.go.templ
+      set: pop-templ-block-body
+    - include: pop-before-nonblank
+
+  pop-templ-block-body:
+    - meta_scope: meta.block.go.templ
+    - match: \}
+      scope: punctuation.section.block.end.go.templ
+      pop: 1
+    - match: (@){{ident}}(?:(\.){{ident}})?
+      scope: variable.function.event.go.templ
+      captures:
+        1: punctuation.definition.variable.go.templ
+      push:
+        - pop-templ-block
+        - pop-arguments-starting-with-type
+    - include: scope:text.html.go.templ
+      apply_prototype: true
+
+  match-string-templates:
+    - meta_append: true
+    # This context is used for interpolation within quoted or unquoted strings.
+    # Matchs only if closing `}` is found on same line to avoid false positives.
+    # It clears the `string` scope of the owning context.
+    - match: ({)(-?)(?=.*?})
+      captures:
+        1: punctuation.section.interpolation.begin.go
+        2: keyword.operator.template.trim.left.go
+      push:
+        - pop-now-clear-scope
+        - match-template-inner
+        - match-template-function
+        - match-template-keyword
+
+  match-text-templates:
+    - meta_append: true
+    # This context is used for interpolation in text or normal content.
+    # It does not clear scopes of the owning context.
+    - match: ({)(-?)
+      captures:
+        1: punctuation.section.interpolation.begin.go
+        2: keyword.operator.template.trim.left.go
+      push:
+        - match-template-inner
+        - match-template-function
+        - match-template-keyword
+
+  match-template-inner:
+    - meta_scope: meta.interpolation.go
+    - meta_content_scope: source.go.template
+    - match: (-?)(})
+      captures:
+        1: keyword.operator.template.trim.right.go
+        2: punctuation.section.interpolation.end.go
+      pop: 1
+    - include: match-template-expressions

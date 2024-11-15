@@ -1,0 +1,11 @@
+# git
+.github/ export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+
+# screenshots
+preview.* export-ignore
+
+# development
+tests/ export-ignore
+make.cmd export-ignore
